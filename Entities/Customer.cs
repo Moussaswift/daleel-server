@@ -18,15 +18,15 @@ namespace daleel.Entities
         [Required]
         public CustomerType Type { get; set; }
 
-        public string PhotoURL { get; set; }
+        public string? PhotoURL { get; set; }
 
-        public ContactInfo ContactInfo { get; set; }
+        public ContactInfo? ContactInfo { get; set; }
 
-        public AddressInfo AddressInfo { get; set; }
+        public AddressInfo? AddressInfo { get; set; }
 
-        public ICollection<Lead> Leads { get; set; }
+        public ICollection<Lead>? Leads { get; set; }
 
-        public ICollection<Sale> Sales { get; set; }
+        public ICollection<Sale>? Sales { get; set; }
     }
 
     public enum CustomerType
