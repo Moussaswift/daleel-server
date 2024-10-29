@@ -2,13 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
-# Copy .csproj and restore as distinct layers
-COPY daleel.csproj ./
-RUN dotnet restore
+# Copy the .csproj file and restore dependencies
+COPY daleel.csproj ./daleel.csproj
+RUN dotnet restore daleel.csproj
 
-# Copy everything else and build
+# Copy the entire project directory and publish
 COPY . ./
-RUN dotnet publish -c Release -o out
+RUN dotnet publish daleel.csproj -c Release -o out
 
 # Use runtime-only image for final output
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
