@@ -1,29 +1,19 @@
-# Build stage
+# Use .NET SDK for build stage
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy csproj and restore dependencies
-COPY *.sln .
-COPY */*.csproj ./
-RUN for file in $(ls *.csproj); do mkdir -p ${file%.*}/ && mv $file ${file%.*}/; done
+# Copy .csproj and restore as distinct layers
+COPY daleel.csproj ./
 RUN dotnet restore
 
-# Copy all files and build
-COPY . .
-RUN dotnet build -c Release -o /app/build
+# Copy everything else and build
+COPY . ./
+RUN dotnet publish -c Release -o out
 
-# Publish
-RUN dotnet publish -c Release -o /app/publish
-
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS final
+# Use runtime-only image for final output
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/publish .
-EXPOSE 80
-EXPOSE 443
+COPY --from=build /app/out ./
 
-# Set environment variables
-ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Production
-
-ENTRYPOINT ["dotnet", "YourAppName.dll"] 
+# Set the entrypoint to run the app
+ENTRYPOINT ["dotnet", "daleel.dll"]
