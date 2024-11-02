@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using daleel.Data;
 using daleel.Entities;
 using Microsoft.EntityFrameworkCore;
+using daleel.Services;
+using daleel.DTOs;
 
 namespace daleel.Controllers
 {
@@ -11,10 +13,12 @@ namespace daleel.Controllers
     public class LeadsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILeadService _leadService;
 
-        public LeadsController(ApplicationDbContext context)
+        public LeadsController(ApplicationDbContext context, ILeadService leadService)
         {
             _context = context;
+            _leadService = leadService;
         }
 
         // GET: api/Leads
@@ -40,12 +44,21 @@ namespace daleel.Controllers
 
         // POST: api/Leads
         [HttpPost]
-        public async Task<ActionResult<Lead>> PostLead(Lead lead)
+        public async Task<ActionResult> PostLead(CreateLeadDto createLeadDto)
         {
-            _context.Leads.Add(lead);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetLead", new { id = lead.Id }, lead);
+            try
+            {
+                var lead = await _leadService.CreateLeadAsync(createLeadDto);
+                return Created(string.Empty, null);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while creating the lead");
+            }
         }
 
         // PUT: api/Leads/5

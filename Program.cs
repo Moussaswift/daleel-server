@@ -28,19 +28,17 @@ builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ISourceService, SourceService>();
+builder.Services.AddScoped<ILeadService, LeadService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Daleel API v1");
-        c.RoutePrefix = "api-docs"; // Set custom route for Swagger UI
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Daleel API v1");
+    c.RoutePrefix = "api-docs"; // Set custom route for Swagger UI
+});
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
