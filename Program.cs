@@ -6,6 +6,17 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -14,7 +25,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), 
         npgsqlOptionsAction: sqlOptions =>
         {
-            sqlOptions.CommandTimeout(120); // Increase timeout to 120 seconds
+            sqlOptions.CommandTimeout(120);
         }));
 
 // Configure Swagger/OpenAPI
@@ -37,8 +48,11 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Daleel API v1");
-    c.RoutePrefix = "api-docs"; // Set custom route for Swagger UI
+    c.RoutePrefix = "api-docs";
 });
+
+// Use CORS before other middleware
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

@@ -25,21 +25,34 @@ namespace daleel.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Lead>>> GetLeads()
         {
-            return await _context.Leads.ToListAsync();
+            try
+            {
+                var leads = await _leadService.GetLeadsAsync();
+                return Ok(leads);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving leads");
+            }
         }
 
         // GET: api/Leads/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Lead>> GetLead(Guid id)
         {
-            var lead = await _context.Leads.FindAsync(id);
-
-            if (lead == null)
+            try
             {
-                return NotFound();
+                var lead = await _leadService.GetLeadByIdAsync(id);
+                return Ok(lead);
             }
-
-            return lead;
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving the lead");
+            }
         }
 
         // POST: api/Leads
@@ -65,51 +78,46 @@ namespace daleel.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutLead(Guid id, Lead lead)
         {
-            if (id != lead.Id)
+            try
+            {
+                await _leadService.UpdateLeadAsync(id, lead);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException)
             {
                 return BadRequest();
             }
-
-            _context.Entry(lead).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
             catch (DbUpdateConcurrencyException)
             {
-                if (!LeadExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(409, "The lead has been modified by another user");
             }
-
-            return NoContent();
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating the lead");
+            }
         }
 
         // DELETE: api/Leads/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLead(Guid id)
         {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null)
+            try
             {
-                return NotFound();
+                await _leadService.DeleteLeadAsync(id);
+                return NoContent();
             }
-
-            _context.Leads.Remove(lead);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool LeadExists(Guid id)
-        {
-            return _context.Leads.Any(e => e.Id == id);
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while deleting the lead");
+            }
         }
     }
 }
