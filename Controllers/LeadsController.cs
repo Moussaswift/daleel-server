@@ -23,12 +23,12 @@ namespace daleel.Controllers
 
         // GET: api/Leads
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Lead>>> GetLeads()
+        public async Task<ActionResult<PaginatedResponseDto<Lead>>> GetLeads([FromQuery] PaginationDto pagination)
         {
             try
             {
-                var leads = await _leadService.GetLeadsAsync();
-                return Ok(leads);
+                var paginatedLeads = await _leadService.GetLeadsAsync(pagination);
+                return Ok(paginatedLeads);
             }
             catch (Exception)
             {

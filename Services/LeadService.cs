@@ -14,23 +14,72 @@ namespace daleel.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<Lead>> GetLeadsAsync()
+        public async Task<PaginatedResponseDto<Lead>> GetLeadsAsync(PaginationDto pagination)
         {
-            return await _context.Leads
-                .Include(l => l.Customer).ThenInclude(c => c.ContactInfo)
-                .Include(l => l.Source)
-                .Include(l => l.Items)
-                .Include(l => l.Notes)
+            var query = _context.Leads
+                .Select(l => new Lead
+                {
+                    Id = l.Id,
+                    CustomerId = l.CustomerId,
+                    Customer = new Customer
+                    {
+                        Id = l.Customer.Id,
+                        FullName = l.Customer.FullName,
+                        Company = l.Customer.Company,
+                        Type = l.Customer.Type,
+                        PhotoURL = l.Customer.PhotoURL,
+                        ContactInfo = l.Customer.ContactInfo,
+                        AddressInfo = l.Customer.AddressInfo,
+                    },
+                    SourceId = l.SourceId,
+                    Source = l.Source,
+                    Items = l.Items,
+                    Notes = l.Notes,
+                    Status = l.Status
+                });
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pagination.PageSize);
+
+            var items = await query
+                .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync();
+
+            return new PaginatedResponseDto<Lead>
+            {
+                Items = items,
+                PageNumber = pagination.PageNumber,
+                PageSize = pagination.PageSize,
+                TotalPages = totalPages,
+                TotalCount = totalCount
+            };
         }
 
         public async Task<Lead> GetLeadByIdAsync(Guid id)
         {
             var lead = await _context.Leads
-                .Include(l => l.Customer).ThenInclude(c => c.ContactInfo)
-                .Include(l => l.Source)
-                .Include(l => l.Items)
-                .Include(l => l.Notes)
+                .Select(l => new Lead
+                {
+                    Id = l.Id,
+                    CustomerId = l.CustomerId,
+                    Customer = new Customer
+                    {
+                        Id = l.Customer.Id,
+                        FullName = l.Customer.FullName,
+                        Company = l.Customer.Company,
+                        Type = l.Customer.Type,
+                        PhotoURL = l.Customer.PhotoURL,
+                        ContactInfo = l.Customer.ContactInfo,
+                        AddressInfo = l.Customer.AddressInfo,
+                        // Leads and Sales are intentionally omitted
+                    },
+                    SourceId = l.SourceId,
+                    Source = l.Source,
+                    Items = l.Items,
+                    Notes = l.Notes,
+                    Status = l.Status
+                })
                 .FirstOrDefaultAsync(l => l.Id == id);
 
             if (lead == null)
@@ -113,7 +162,7 @@ namespace daleel.Services
 
     public interface ILeadService
     {
-        Task<IEnumerable<Lead>> GetLeadsAsync();
+        Task<PaginatedResponseDto<Lead>> GetLeadsAsync(PaginationDto pagination);
         Task<Lead> GetLeadByIdAsync(Guid id);
         Task<Lead> CreateLeadAsync(CreateLeadDto createLeadDto);
         Task UpdateLeadAsync(Guid id, Lead lead);
