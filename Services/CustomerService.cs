@@ -31,9 +31,32 @@ namespace daleel.Services
 
         public async Task<Customer> CreateCustomerAsync(Customer customer)
         {
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-            return customer;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Add the customer and related entities
+                await _context.Customers.AddAsync(customer);
+                
+                if (customer.ContactInfo != null)
+                {
+                    await _context.ContactInfos.AddAsync(customer.ContactInfo);
+                }
+                
+                if (customer.AddressInfo != null)
+                {
+                    await _context.AddressInfos.AddAsync(customer.AddressInfo);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                return customer;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task UpdateCustomerAsync(Customer customer)

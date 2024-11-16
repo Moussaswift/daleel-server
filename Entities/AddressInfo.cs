@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace daleel.Entities
 {
@@ -20,6 +21,8 @@ namespace daleel.Entities
         public string Country { get; set; }
 
         public Guid CustomerId { get; set; }
+        
+        [JsonIgnore]
         public Customer Customer { get; set; }
     }
 }
