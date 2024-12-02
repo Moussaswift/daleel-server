@@ -3,6 +3,7 @@ using daleel.Entities;
 using daleel.Services;
 using Microsoft.EntityFrameworkCore;
 using daleel.Models;
+using daleel.DTOs;
 
 namespace daleel.Controllers
 {
@@ -19,10 +20,19 @@ namespace daleel.Controllers
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+            // GET: api/Customers
+        [HttpGet]
+        public async Task<ActionResult<PaginatedResponseDto<Customer>>> GetCustomers([FromQuery] PaginationDto pagination)
         {
-            var customers = await _customerService.GetAllCustomersAsync();
-            return Ok(customers);
+            try
+            {
+                var paginatedCustomers = await _customerService.GetAllCustomersAsync(pagination);
+                return Ok(paginatedCustomers);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving customers");
+            }
         }
 
         // GET: api/Customers/5
@@ -128,6 +138,51 @@ namespace daleel.Controllers
         {
             var customer = await _customerService.GetCustomerAsync(id);
             return customer != null;
+        }
+
+        // GET: api/Customers/{id}/notes
+        [HttpGet("{id}/notes")]
+        public async Task<ActionResult<PaginatedResponseDto<Note>>> GetCustomerNotes(Guid id, [FromQuery] PaginationDto pagination)
+        {
+            try
+            {
+                var notes = await _customerService.GetCustomerNotesAsync(id, pagination);
+                return Ok(notes);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving customer notes");
+            }
+        }
+
+        // GET: api/Customers/{id}/leads
+        [HttpGet("{id}/leads")]
+        public async Task<ActionResult<PaginatedResponseDto<Lead>>> GetCustomerLeads(Guid id, [FromQuery] PaginationDto pagination)
+        {
+            try
+            {
+                var leads = await _customerService.GetCustomerLeadsAsync(id, pagination);
+                return Ok(leads);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving customer leads");
+            }
+        }
+
+        // GET: api/Customers/{id}/sales
+        [HttpGet("{id}/sales")]
+        public async Task<ActionResult<PaginatedResponseDto<Sale>>> GetCustomerSales(Guid id, [FromQuery] PaginationDto pagination)
+        {
+            try
+            {
+                var sales = await _customerService.GetCustomerSalesAsync(id, pagination);
+                return Ok(sales);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving customer sales");
+            }
         }
     }
 }
